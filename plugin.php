@@ -29,12 +29,23 @@ class scheduled_send extends rcube_plugin
         $scheduled_time = rcube_utils::get_input_value('scheduled_send_time', rcube_utils::INPUT_POST);
 
         if (!empty($scheduled_time)) {
-            // Сохраняем письмо в базу данных
-            $this->save_to_database($args['message'], $scheduled_time);
+            // Проверяем корректность времени
+            $scheduled_timestamp = strtotime($scheduled_time);
+            if ($scheduled_timestamp === false || $scheduled_timestamp < time()) {
+                $rcmail->output->show_message('Некорректное время отправки. Укажите время в будущем.', 'error');
+                $args['abort'] = true;
+                return $args;
+            }
 
-            // Отменяем отправку письма сейчас
-            $args['abort'] = true;
-            $rcmail->output->show_message('Письмо запланировано на ' . $scheduled_time, 'confirmation');
+            // Сохраняем письмо в базу данных
+            if ($this->save_to_database($args['message'], $scheduled_time)) {
+                // Отменяем отправку письма сейчас
+                $args['abort'] = true;
+                $rcmail->output->show_message('Письмо запланировано на ' . $scheduled_time, 'confirmation');
+            } else {
+                $rcmail->output->show_message('Ошибка при сохранении письма. Попробуйте снова.', 'error');
+                $args['abort'] = true;
+            }
         }
 
         return $args;
@@ -45,9 +56,24 @@ class scheduled_send extends rcube_plugin
         $rcmail = rcmail::get_instance();
         $db = $rcmail->get_dbh();
 
+        // Экранирование данных
+        $subject = $db->escape($message->get_header('subject'));
+        $body = $db->escape($message->get_body());
+        $from = $db->escape($message->get_header('from'));
+        $to = $db->escape($message->get_header('to'));
+        $cc = $db->escape($message->get_header('cc'));
+        $bcc = $db->escape($message->get_header('bcc'));
+
         // Сохраняем письмо в базу данных
-        $sql = "INSERT INTO scheduled_emails (user_id, subject, body, scheduled_time, status)
-                VALUES (?, ?, ?, ?, 'pending')";
-        $db->query($sql, $rcmail->user->ID, $message->subject, $message->body, $scheduled_time);
+        $sql = "INSERT INTO scheduled_emails (user_id, subject, body, from_address, to_address, cc, bcc, scheduled_time, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
+        $result = $db->query($sql, $rcmail->user->ID, $subject, $body, $from, $to, $cc, $bcc, $scheduled_time);
+
+        if ($db->is_error($result)) {
+            rcube::write_log('errors', 'Failed to save scheduled email: ' . $db->is_error($result));
+            return false;
+        }
+
+        return true;
     }
 }

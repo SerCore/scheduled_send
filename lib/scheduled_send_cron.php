@@ -10,13 +10,23 @@ $sql = "SELECT * FROM scheduled_emails WHERE scheduled_time <= NOW() AND status 
 $result = $db->query($sql);
 
 while ($row = $db->fetch_assoc($result)) {
-    // Отправляем письмо
+    // Создаем объект письма
     $message = new rcube_message();
-    $message->subject = $row['subject'];
-    $message->body = $row['body'];
+    $message->set_header('Subject', $row['subject']);
+    $message->set_body($row['body']);
+    $message->set_header('From', $row['from_address']);
+    $message->set_header('To', $row['to_address']);
+    $message->set_header('Cc', $row['cc']);
+    $message->set_header('Bcc', $row['bcc']);
 
-    $rcmail->smtp->send_message($message);
+    // Отправляем письмо
+    $sent = $rcmail->smtp->send_message($message);
 
-    // Обновляем статус письма
-    $db->query("UPDATE scheduled_emails SET status = 'sent' WHERE id = ?", $row['id']);
+    if ($sent) {
+        // Обновляем статус письма
+        $db->query("UPDATE scheduled_emails SET status = 'sent' WHERE id = ?", $row['id']);
+    } else {
+        // Логируем ошибку
+        rcube::write_log('errors', 'Failed to send scheduled email ID: ' . $row['id']);
+    }
 }
