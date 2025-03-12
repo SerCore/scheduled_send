@@ -1,0 +1,23 @@
+#scheduled_send_field {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#scheduled_send_field label {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+#scheduled_send_time {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.cancel-scheduled-email {
+    color: red;
+    cursor: pointer;
+}

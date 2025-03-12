@@ -20,13 +20,11 @@ while ($row = $db->fetch_assoc($result)) {
     $message->set_header('Bcc', $row['bcc']);
 
     // Отправляем письмо
-    $sent = $rcmail->smtp->send_message($message);
-
-    if ($sent) {
+    if ($rcmail->smtp->send_message($message)) {
         // Обновляем статус письма
         $db->query("UPDATE scheduled_emails SET status = 'sent' WHERE id = ?", $row['id']);
     } else {
         // Логируем ошибку
-        rcube::write_log('errors', 'Failed to send scheduled email ID: ' . $row['id']);
+        rcube::write_log('errors', 'Ошибка отправки письма: ' . $rcmail->smtp->get_error());
     }
 }
