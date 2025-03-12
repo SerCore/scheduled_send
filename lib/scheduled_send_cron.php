@@ -6,8 +6,8 @@ $rcmail = rcmail::get_instance();
 $db = $rcmail->get_dbh();
 
 // Получаем письма, которые нужно отправить
-$sql = "SELECT * FROM scheduled_emails WHERE scheduled_time <= NOW() AND status = 'pending'";
-$result = $db->query($sql);
+$sql = "SELECT * FROM scheduled_emails WHERE scheduled_time <= ? AND status = 'pending'";
+$result = $db->query($sql, date('Y-m-d H:i:s'));
 
 while ($row = $db->fetch_assoc($result)) {
     // Создаем объект письма
@@ -23,6 +23,7 @@ while ($row = $db->fetch_assoc($result)) {
     if ($rcmail->smtp->send_message($message)) {
         // Обновляем статус письма
         $db->query("UPDATE scheduled_emails SET status = 'sent' WHERE id = ?", $row['id']);
+        rcube::write_log('scheduled_send.log', 'Письмо отправлено: ' . $row['id']);
     } else {
         // Логируем ошибку
         rcube::write_log('errors', 'Ошибка отправки письма: ' . $rcmail->smtp->get_error());

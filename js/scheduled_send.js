@@ -1,4 +1,5 @@
 $(document).ready(function() {
+    // Валидация времени отправки
     $('#scheduled_send_time').on('change', function() {
         const selectedTime = new Date($(this).val());
         const currentTime = new Date();
@@ -7,7 +8,7 @@ $(document).ready(function() {
             alert('Пожалуйста, выберите время в будущем.');
             $(this).val(''); // Сброс выбора
         } else {
-            console.log('Время отправки выбрано: ' + $(this).val());
+            console.log('Время отправки выбрано: ' . $(this).val());
         }
     });
 

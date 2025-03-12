@@ -7,3 +7,5 @@ $labels['cancel_scheduled_email'] = 'Отменить запланированн
 $labels['scheduled_email_saved'] = 'Письмо запланировано на %s';
 $labels['scheduled_email_canceled'] = 'Письмо отменено';
 $labels['invalid_time'] = 'Некорректное время. Укажите время в будущем.';
+$labels['scheduled_email_error'] = 'Ошибка при сохранении письма.';
+$labels['scheduled_email_cancel_error'] = 'Ошибка при отмене письма.';
